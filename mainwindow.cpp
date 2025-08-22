@@ -3,9 +3,13 @@
 #include "ui_mainwindow.h"
 #include <sstream>
 #include <memory>
+
 #include "maddy/parser.h"
 #include "markdownhighlighter.h"
 
+#include <QWebEnginePage>
+#include <QScrollBar>
+#include <QTimer>
 #include <QHBoxLayout>
 #include <QSplitter>
 #include <QWebEngineView>
@@ -28,19 +32,24 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    m_lastEditorScrollRatio = 0.0;
+
+    m_editorFontSize = 12;
+    m_previewFontSize = 12;
+
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect screenGeometry = screen->availableGeometry();
-    int height = screenGeometry.height() * 0.7;
-    int width = screenGeometry.width() * 0.7;
+    int height = screenGeometry.height() * 0.8;
+    int width = screenGeometry.width() * 0.8;
     resize(width, height);  //窗口大小
-    m_currentFontSize = 20; //初始字體大小
+
 
     QHBoxLayout *mainLayout = new QHBoxLayout(ui->centralWidget);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     QSplitter *splitter = new QSplitter(Qt::Horizontal, this);
 
-    QFont baseFont("Arial", m_currentFontSize);
+    QFont baseFont("Arial", m_editorFontSize);
     m_editor = new QTextEdit(splitter);
     m_editor->setObjectName("editor");
     m_editor->setAutoFormatting(QTextEdit::AutoNone);
@@ -58,9 +67,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_editor, &QTextEdit::textChanged, this, &MainWindow::onTextChanged);
     connect(m_editor->document(), &QTextDocument::modificationChanged, this, &MainWindow::onDocumentModified);
+    connect(m_preview, &QWebEngineView::loadFinished, this, &MainWindow::onPreviewLoadFinished);
+    m_previewUpdateTimer = new QTimer(this);
 
-    setupFileActions();
-    setupEditActions();
+    m_previewUpdateTimer->setSingleShot(true); // 設定為單次觸發
+    m_previewUpdateTimer->setInterval(500); // 設定延遲時間為 300 毫秒
+    connect(m_previewUpdateTimer, &QTimer::timeout, this, &MainWindow::updatePreview);
+
+
+    setupActions();
+    loadCssTemplate();
     m_currentFilePath = ""; // 初始化檔案路徑為空
     updateWindowTitle(); // 設定初始視窗標題
 }
@@ -70,58 +86,17 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+
 void MainWindow::onTextChanged()
 {
-    const QString css = QString(R"(
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                font-size: %1pt;
-                line-height: 1.6;
-            }
-            blockquote {
-                border-left: 4px solid #dfe2e5;
-                padding: 0 1em;
-                color: #6a737d;
-            }
-            pre, code {
-                font-family: Consolas;
-                font-size: %2pt;
-                background-color: #f6f8fa;
-                border-radius: 3px;
-            }
-            pre {
-                padding: 16px;
-                overflow: auto;
-            }
-            code {
-                padding: .2em .4em;
-            }
-        </style>
-    )").arg(m_currentFontSize).arg(m_currentFontSize - 2);
-
-    // 1. 從編輯器獲取純文字 Markdown 原始碼
-    QString markdownText = m_editor->toPlainText();
-
-    // --- 使用 maddy 庫進行轉換 ---
-    std::stringstream markdownStream(markdownText.toStdString());
-    auto parser = std::make_shared<maddy::Parser>();
-    std::string htmlString = parser->Parse(markdownStream);
-
-    // 2. 將 CSS 樣式表和轉換後的 HTML 內容組合起來
-    QString fullHtml = css + QString::fromStdString(htmlString);
-
-    // 3. 將最終生成的、帶有樣式的 HTML 顯示在右側預覽視窗
-    m_preview->setHtml(fullHtml);
-
+    m_previewUpdateTimer->start();
 }
 
-void MainWindow::setupFileActions()
+
+void MainWindow::setupActions()
 {
-    // 建立功能表
+    // --- 檔案功能表 ---
     QMenu *fileMenu = menuBar()->addMenu("檔案(&F)");
-    // --- 建立 QAction ---
-    // QAction 是 "指令" 的抽象，可以同時放在功能表和工具列中
 
     // 新增
     QAction *newAction = new QAction("新增(&N)", this);
@@ -148,13 +123,65 @@ void MainWindow::setupFileActions()
     fileMenu->addAction(openAction);
     fileMenu->addAction(saveAction);
     fileMenu->addAction(saveAsAction);
-/*
-    toolbar->addAction(newAction);
-    toolbar->addAction(openAction);
-    toolbar->addAction(saveAction);
-    toolbar->addAction(saveAsAction);
-*/
+
+    // --- 編輯功能表 ---
+    QToolBar *editToolBar = addToolBar("Edit");
+    QMenu *editMenu = menuBar()->addMenu("編輯(&E)");
+
+    // --- 編輯區字體控制 (使用 Lambda) ---
+    QAction *editorZoomInAction = new QAction("放大編輯區", this);
+    connect(editorZoomInAction, &QAction::triggered, this, [this]() {
+        m_editorFontSize += 1; // 增加字號
+        QFont f = m_editor->font();
+        f.setPointSize(m_editorFontSize);
+        m_editor->setFont(f);
+        m_highlighter = new MarkdownHighlighter(m_editor->document(), f);
+    });
+
+    QAction *editorZoomOutAction = new QAction("縮小編輯區", this);
+    connect(editorZoomOutAction, &QAction::triggered, this, [this]() {
+        if (m_editorFontSize > 8) {
+            m_editorFontSize -= 1; // 減小字號
+            QFont f = m_editor->font();
+            f.setPointSize(m_editorFontSize);
+            m_editor->setFont(f);
+            m_highlighter = new MarkdownHighlighter(m_editor->document(), f);
+        }
+    });
+
+    // --- 預覽區字體控制 (使用 Lambda) ---
+    QAction *previewZoomInAction = new QAction("放大預覽區", this);
+    connect(previewZoomInAction, &QAction::triggered, this, [this]() {
+        m_previewFontSize += 1;
+        onTextChanged(); // 重新渲染預覽
+    });
+
+    QAction *previewZoomOutAction = new QAction("縮小預覽區", this);
+    connect(previewZoomOutAction, &QAction::triggered, this, [this]() {
+        if (m_previewFontSize > 8) {
+            m_previewFontSize -= 1;
+            onTextChanged(); // 重新渲染預覽
+        }
+    });
+
+    // 建立新的 Action
+    QAction *setEditorFontAction = new QAction("編輯區字體大小...", this);
+    connect(setEditorFontAction, &QAction::triggered, this, &MainWindow::setEditorFontSize);
+
+    QAction *setPreviewFontAction = new QAction("預覽區字體大小...", this);
+    connect(setPreviewFontAction, &QAction::triggered, this, &MainWindow::setPreviewFontSize);
+
+    // 將新的 Action 加入到「編輯」功能表中
+    editMenu->addAction(setEditorFontAction);
+    editMenu->addAction(setPreviewFontAction);
+
+    editToolBar->addAction(editorZoomInAction);
+    editToolBar->addAction(editorZoomOutAction);
+    editToolBar->addAction(previewZoomInAction);
+    editToolBar->addAction(previewZoomOutAction);
 }
+
+
 
 void MainWindow::updateWindowTitle()
 {
@@ -268,47 +295,86 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-void MainWindow::setupEditActions()
+void MainWindow::applyEditorFontSize()
 {
-    QMenu *editMenu = menuBar()->addMenu("編輯(&E)");
-    //QToolBar *toolbar = addToolBar("Edit");
+    QFont font = m_editor->font();
+    font.setPointSize(m_editorFontSize);
+    m_editor->setFont(font);
 
-    // 調整字體大小 - 這就是你寫的程式碼
-    QAction *fontSizeAction = new QAction("字體大小", this);
-    // 可以在這裡為 Action 設定一個圖示 (可選)
-    // fontSizeAction->setIcon(QIcon(":/icons/font-size.png"));
-    connect(fontSizeAction, &QAction::triggered, this, &MainWindow::FontSizeSet);
-
-    editMenu->addAction(fontSizeAction);
-    //toolbar->addAction(fontSizeAction);
+    // 重新建立 Highlighter 以套用新的基礎字體
+    m_highlighter = new MarkdownHighlighter(m_editor->document(), font);
 }
 
-void MainWindow::FontSizeSet()
+void MainWindow::setEditorFontSize()
 {
     bool ok;
-    // 彈出一個整數輸入對話方塊
-    int newSize = QInputDialog::getInt(this,
-                                       "設定字體大小",
-                                       "請輸入新的字體大小:",
-                                       m_currentFontSize, // 預設值
-                                       8,               // 最小值
-                                       72,              // 最大值
-                                       1,               // 步長
-                                       &ok);
-
-    if (ok && newSize > 0) {
-        m_currentFontSize = newSize;
-
-        QFont font = m_editor->font();
-        font.setPointSize(m_currentFontSize);  //使字體大小看起來一樣
-        m_editor->setFont(font);
-
-        // 1. 刪除舊的 highlighter 物件以避免内存洩漏
-        delete m_highlighter;
-        // 2. 用新的字體重新建立一個 highlighter
-        m_highlighter = new MarkdownHighlighter(m_editor->document(), font);
-
-        // 更新右側預覽區
-        onTextChanged();
+    int newSize = QInputDialog::getInt(this, "設定編輯區字體", "請輸入字體大小:",
+                                       m_editorFontSize, 8, 72, 1, &ok);
+    if (ok) {
+        m_editorFontSize = newSize;
+        applyEditorFontSize(); // 呼叫輔助函式來套用設定
     }
+}
+
+void MainWindow::setPreviewFontSize()
+{
+    bool ok;
+    int newSize = QInputDialog::getInt(this, "設定預覽區字體", "請輸入字體大小:",
+                                       m_previewFontSize, 8, 72, 1, &ok);
+    if (ok) {
+        m_previewFontSize = newSize;
+        onTextChanged(); // 重新渲染預覽區以套用新的 CSS 字體大小
+    }
+}
+
+void MainWindow::loadCssTemplate()
+{
+    // 從 Qt 資源系統中讀取 CSS 檔案
+    QFile file(":/preview_style.css");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        m_cssTemplate = in.readAll();
+        file.close();
+    } else {
+        qDebug() << "Error: Could not load CSS file from resources.";
+    }
+}
+
+// 在 mainwindow.cpp 末尾新增
+void MainWindow::updatePreview()
+{
+    QString markdownText = m_editor->toPlainText();
+
+    QScrollBar *editorScrollBar = m_editor->verticalScrollBar();
+    // 檢查最大值以避免除以零的錯誤
+    if (editorScrollBar->maximum() > 0) {
+        m_lastEditorScrollRatio = (double)editorScrollBar->value() / editorScrollBar->maximum();
+    }
+
+    // 使用 maddy 引擎進行轉換
+    std::stringstream markdownStream(markdownText.toStdString());
+    auto parser = std::make_shared<maddy::Parser>();
+    std::string htmlString = parser->Parse(markdownStream);
+
+
+    // 組合 CSS 並顯示
+    QString finalCss = m_cssTemplate.arg(m_previewFontSize).arg(m_previewFontSize - 2);
+    QString fullHtml = QString("<style>%1</style>").arg(finalCss)
+                     + QString::fromStdString(htmlString);
+
+    // 顯示結果
+    m_preview->setHtml(fullHtml);
+}
+
+void MainWindow::onPreviewLoadFinished()
+{
+    // 當預覽區的新 HTML 載入完成後，執行這段 JavaScript
+    // 這段 JS 的作用是計算出頁面的總捲動高度，然後乘以我們儲存的比例，
+    // 最後將頁面捲動到計算出的位置。
+    QString script = QString(
+        "const scrollHeight = document.body.scrollHeight - window.innerHeight;"
+        "window.scrollTo(0, scrollHeight * %1);"
+    ).arg(m_lastEditorScrollRatio);
+
+    m_preview->page()->runJavaScript(script);
 }

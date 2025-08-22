@@ -16,6 +16,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     // 預設文字使用基礎字體
     QTextCharFormat defaultFormat;
     defaultFormat.setFont(baseFont);
+
     // --- 在基礎字體上進行修改來定義所有規則 ---
     // 1.1 標題 (例如 # ## ###)
     QTextCharFormat headingFormat1;
@@ -55,8 +56,8 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QFont headingFont4 = baseFont;
     headingFont4.setBold(true); // 標題加粗
     headingFont4.setPointSize(baseFont.pointSize() * 1.3); // 標題字號放大 40%
-    headingFormat1.setFont(headingFont4);
-    headingFormat1.setForeground(QColor(135, 206, 250)); // 淡藍色
+    headingFormat4.setFont(headingFont4);
+    headingFormat4.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{4}\\s.*)");
     rule.format = headingFormat4;
     m_highlightingRules.append(rule);
@@ -105,12 +106,12 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
 
     // 4. 程式碼區塊分隔符 (例如 ```)
     QTextCharFormat codeBlockFormat;
-    QFont codeBlockFont ;
+    QFont codeBlockFont = baseFont;
     codeBlockFormat.setFont(baseFont);
     codeBlockFormat.setForeground(Qt::gray);
     codeBlockFont.setFamily("Consolas");
     codeBlockFont.setPointSize(baseFont.pointSize());
-    rule.pattern = QRegularExpression("```.*");
+    rule.pattern = QRegularExpression("```");
     rule.format = codeBlockFormat;
     m_highlightingRules.append(rule);
 
@@ -120,7 +121,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     listFont.setBold(true);
     listFormat.setFont(listFont);
     listFormat.setForeground(QColor(255, 165, 0)); // 橘色
-    rule.pattern = QRegularExpression("^\\s*([\\*\\+\\-]\\s|\\d+\\.\\s)");
+    rule.pattern = QRegularExpression("^\\s*([\\*\\+\\-]\\s|\\d+\\.\\s.*)");
     rule.format = listFormat;
     m_highlightingRules.append(rule);
 

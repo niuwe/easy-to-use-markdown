@@ -6,7 +6,7 @@
 class QTextEdit;
 class QWebEngineView;
 class QCloseEvent;
-
+class QTimer;
 class MarkdownHighlighter;
 
 QT_BEGIN_NAMESPACE
@@ -24,16 +24,20 @@ private slots:
     bool saveFile();
     bool saveFileAs();
     void onDocumentModified();
-    void FontSizeSet();
+    void updatePreview();
+    void setEditorFontSize();
+    void setPreviewFontSize();
+    void onPreviewLoadFinished();
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private:
-    void setupFileActions();
     void updateWindowTitle();
-    void setupEditActions();
+    void setupActions();
+    void applyEditorFontSize();
+    void loadCssTemplate();
 
 private:
     Ui::MainWindow *ui;
@@ -41,7 +45,12 @@ private:
     QWebEngineView *m_preview;
     QString m_currentFilePath;
     MarkdownHighlighter *m_highlighter;
-    int m_currentFontSize;
+    int m_editorFontSize;
+    int m_previewFontSize;
+    QString m_cssTemplate;
+    QTimer *m_previewUpdateTimer;
+    qreal m_lastEditorScrollRatio;
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 };

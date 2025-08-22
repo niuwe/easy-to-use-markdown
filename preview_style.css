@@ -1,0 +1,126 @@
+/* preview_style.css (Enhanced Version) */
+
+/* 使用 CSS 变量来定义主题颜色，方便未来修改 */
+:root {
+    --main-bg-color: #ffffff;
+    --main-text-color: #24292e;
+    --accent-color: #0366d6;
+    --quote-color: #6a737d;
+    --quote-border-color: #dfe2e5;
+    --code-bg-color: #f6f8fa;
+    --border-color: #eaecef;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: %1pt;
+    line-height: 1.6;
+    background-color: var(--main-bg-color);
+    color: var(--main-text-color);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding-bottom: .3em;
+}
+
+h1, h2 {
+    border-bottom: 1px solid var(--border-color);
+}
+
+h1 { font-size: 2.0em; }
+h2 { font-size: 1.5em; }
+h3 { font-size: 1.25em; }
+h4 { font-size: 1.1em; }
+h5 { font-size: 1.0em; }
+h6 { font-size: 0.9em; color: var(--quote-color); }
+
+p {
+    margin-top: 0;
+    margin-bottom: 1em;
+}
+
+ol, ul {
+    padding-left: 2em;
+}
+
+blockquote {
+    border-left: 4px solid var(--quote-border-color);
+    padding: 0 1em;
+    color: var(--quote-color);
+}
+
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+hr {
+    height: .25em;
+    padding: 0;
+    margin: 24px 0;
+    background-color: var(--border-color);
+    border: 0;
+}
+
+/* --- 代码样式 --- */
+pre, code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: %2pt;
+}
+
+pre {
+    padding: 16px;
+    overflow: auto;
+    background-color: var(--code-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    white-space: pre-wrap;
+}
+
+/* 修正 pre 内部 code 的样式 */
+pre > code {
+    padding: 0;
+    margin: 0;
+    background-color: transparent;
+    border: 0;
+}
+
+/* 行内代码样式 */
+p > code, li > code {
+    padding: .2em .4em;
+    margin: 0;
+    background-color: var(--code-bg-color);
+    border-radius: 6px;
+}
+
+/* --- 新增的表格样式 --- */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    text-align: left;
+}
+
+th {
+    background-color: var(--code-bg-color);
+    font-weight: 600;
+}
+
+tr:nth-child(even) {
+    background-color: var(--code-bg-color);
+}
