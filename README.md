@@ -8,6 +8,9 @@
 2. The preview area follows the editing area
 3. Text size settings in the preview area and editing area
 
+# interface
+<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/4095aa28-356a-44be-a74c-60a3ae7cea3e" />
+
 # illustrate
 The [maddy](https://github.com/progsource/maddy) library comes from https://github.com/progsource/maddy  
 - ***In order to adapt to this project, some header files have been changed***
