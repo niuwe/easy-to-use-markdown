@@ -7,6 +7,7 @@
 // -----------------------------------------------------------------------------
 
 #include <functional>
+#include <memory>
 #include <regex>
 #include <string>
 
@@ -47,7 +48,7 @@ public:
   /**
    * IsStartingLine
    *
-   * A quote starts with `> `.
+   * A quote starts with `>`.
    *
    * @method
    * @param {const std::string&} line
@@ -55,14 +56,13 @@ public:
    */
   static bool IsStartingLine(const std::string& line)
   {
-    static std::regex re(R"(^\>.*)");
-    return std::regex_match(line, re);
+    return !line.empty() && line[0] == '>';
   }
 
   /**
    * AddLine
    *
-   * Adding a line which has to be parsed.
+   * Adding a line which has to be parsed, with corrected nesting logic.
    *
    * @method
    * @param {std::string&} line
@@ -76,44 +76,69 @@ public:
       this->isStarted = true;
     }
 
-    bool finish = false;
-    if (line.empty())
+    // --- FIX START: Correct termination logic ---
+
+    // If a line is not a quote, it's a signal to end the block.
+    if (!IsStartingLine(line))
     {
-      finish = true;
+      // If there's an active child, it must be terminated first.
+      // We pass the non-quote line to it, which will trigger its own finish logic.
+      if (this->childParser)
+      {
+        this->childParser->AddLine(line);
+        // Now that the child has processed the end signal, we collect its COMPLETE result.
+        this->result << this->childParser->GetResult().str();
+        this->childParser = nullptr;
+      }
+
+      // Now, terminate the parent parser.
+      this->result << "</blockquote>";
+      this->isFinished = true;
+      return;
     }
 
-    this->parseBlock(line);
+    // --- FIX END ---
 
-    if (this->isInlineBlockAllowed() && !this->childParser)
+    // The line is a valid quote line. Strip one level of ">".
+    std::string content = line;
+    if (content.length() > 1 && content[1] == ' ')
     {
-      this->childParser = this->getBlockParserForLine(line);
+      content.erase(0, 2); // Remove "> "
+    }
+    else
+    {
+      content.erase(0, 1); // Remove ">"
     }
 
+    // If a child parser is already active, pass the stripped content to it.
     if (this->childParser)
     {
-      this->childParser->AddLine(line);
+      this->childParser->AddLine(content);
 
+      // After processing, check if the child has finished (e.g., went from `>>` to `>`).
       if (this->childParser->IsFinished())
       {
         this->result << this->childParser->GetResult().str();
         this->childParser = nullptr;
       }
-
-      return;
     }
-
-    if (this->isLineParserAllowed())
+    else // No active child parser.
     {
-      this->parseLine(line);
+      // Check if the stripped content is ALSO a quote, meaning we need to START nesting.
+      if (IsStartingLine(content))
+      {
+        this->childParser = std::make_shared<QuoteParser>(
+          this->parseLineCallback,
+          this->getBlockParserForLineCallback
+        );
+        this->childParser->AddLine(content);
+      }
+      else // Not nested, just regular content for the current quote level.
+      {
+        this->parseLine(content);
+        this->result << content << "<br/>";
+      }
     }
-
-    if (finish)
-    {
-      this->result << "</blockquote>";
-      this->isFinished = true;
-    }
-
-    this->result << line;
   }
 
   /**
@@ -129,18 +154,7 @@ protected:
 
   bool isLineParserAllowed() const override { return true; }
 
-  void parseBlock(std::string& line) override
-  {
-    static std::regex lineRegexWithSpace(R"(^\> )");
-    line = std::regex_replace(line, lineRegexWithSpace, "");
-    static std::regex lineRegexWithoutSpace(R"(^\>)");
-    line = std::regex_replace(line, lineRegexWithoutSpace, "");
-
-    if (!line.empty())
-    {
-      line += " ";
-    }
-  }
+  void parseBlock(std::string& /*line*/) override {}
 
 private:
   bool isStarted;

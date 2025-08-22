@@ -7,8 +7,11 @@
 // -----------------------------------------------------------------------------
 
 #include <functional>
+#include <memory> // For std::shared_ptr
 #include <regex>
 #include <string>
+#include <vector>
+#include <sstream> // For std::stringstream
 
 #include "maddy/blockparser.h"
 
@@ -82,7 +85,7 @@ public:
 
     if (this->isStarted)
     {
-      if (line == "- | - | -")
+      if (line == "- | - | -" || line == "---|---" || line == "-|-|-" ) // Made separator more flexible
       {
         ++this->currentBlock;
         this->currentRow = 0;
@@ -103,12 +106,25 @@ public:
       }
       this->table[this->currentBlock].push_back(std::vector<std::string>());
 
+      // --- FIX START ---
+      // Trim leading and trailing pipes to prevent empty columns
+      std::string lineToSplit = line;
+      if (!lineToSplit.empty() && lineToSplit.front() == '|')
+      {
+        lineToSplit.erase(0, 1);
+      }
+      if (!lineToSplit.empty() && lineToSplit.back() == '|')
+      {
+        lineToSplit.pop_back();
+      }
+      // --- FIX END ---
+
       std::string segment;
-      std::stringstream streamToSplit(line);
+      std::stringstream streamToSplit(lineToSplit); // Use the trimmed string
 
       while (std::getline(streamToSplit, segment, '|'))
       {
-        this->parseLine(segment);
+        this->parseLine(segment); // This presumably handles inline markdown like **bold**
         this->table[this->currentBlock][this->currentRow].push_back(segment);
       }
 
@@ -140,17 +156,19 @@ protected:
     bool isFirstBlock = true;
     uint32_t currentBlockNumber = 0;
 
+    // A table has a header if it has more than one block (e.g., header and body)
     if (this->table.size() > 1)
     {
       hasHeader = true;
     }
 
+    // A table has a footer if it has 3 or more blocks (header, body, footer)
     if (this->table.size() >= 3)
     {
       hasFooter = true;
     }
 
-    for (const std::vector<std::vector<std::string>>& block : this->table)
+    for (const auto& block : this->table)
     {
       bool isInHeader = false;
       bool isInFooter = false;
@@ -171,30 +189,19 @@ protected:
         result << "<tbody>";
       }
 
-      for (const std::vector<std::string>& row : block)
+      for (const auto& row : block)
       {
         result << "<tr>";
 
-        for (const std::string& column : row)
+        for (const auto& column : row)
         {
           if (isInHeader)
           {
-            result << "<th>";
+            result << "<th>" << column << "</th>";
           }
           else
           {
-            result << "<td>";
-          }
-
-          result << column;
-
-          if (isInHeader)
-          {
-            result << "</th>";
-          }
-          else
-          {
-            result << "</td>";
+            result << "<td>" << column << "</td>";
           }
         }
 
@@ -225,6 +232,7 @@ private:
   bool isFinished;
   uint32_t currentBlock;
   uint32_t currentRow;
+  // 3D vector: table -> blocks (thead/tbody/tfoot) -> rows -> columns
   std::vector<std::vector<std::vector<std::string>>> table;
 }; // class TableParser
 

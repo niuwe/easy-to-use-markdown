@@ -1,8 +1,3 @@
-// markdownhighlighter.cpp
-
-#include "markdownhighlighter.h"
-
-// markdownhighlighter.cpp
 
 #include "markdownhighlighter.h"
 #include <QFont>
@@ -22,7 +17,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat1;
     QFont headingFont1 = baseFont;
     headingFont1.setBold(true); // 標題加粗
-    headingFont1.setPointSize(baseFont.pointSize() * 1.6); // 標題字號放大 40%
+    headingFont1.setPointSize(baseFont.pointSize() * 1.6);
     headingFormat1.setFont(headingFont1);
     headingFormat1.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{1}\\s.*)");
@@ -33,7 +28,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat2;
     QFont headingFont2 = baseFont;
     headingFont2.setBold(true); // 標題加粗
-    headingFont2.setPointSize(baseFont.pointSize() * 1.5); // 標題字號放大 40%
+    headingFont2.setPointSize(baseFont.pointSize() * 1.5);
     headingFormat2.setFont(headingFont2);
     headingFormat2.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{2}\\s.*)");
@@ -44,7 +39,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat3;
     QFont headingFont3 = baseFont;
     headingFont3.setBold(true); // 標題加粗
-    headingFont3.setPointSize(baseFont.pointSize() * 1.4); // 標題字號放大 40%
+    headingFont3.setPointSize(baseFont.pointSize() * 1.4);
     headingFormat3.setFont(headingFont3);
     headingFormat3.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{3}\\s.*)");
@@ -55,7 +50,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat4;
     QFont headingFont4 = baseFont;
     headingFont4.setBold(true); // 標題加粗
-    headingFont4.setPointSize(baseFont.pointSize() * 1.3); // 標題字號放大 40%
+    headingFont4.setPointSize(baseFont.pointSize() * 1.3);
     headingFormat4.setFont(headingFont4);
     headingFormat4.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{4}\\s.*)");
@@ -66,7 +61,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat5;
     QFont headingFont5 = baseFont;
     headingFont5.setBold(true); // 標題加粗
-    headingFont5.setPointSize(baseFont.pointSize() * 1.2); // 標題字號放大 40%
+    headingFont5.setPointSize(baseFont.pointSize() * 1.2);
     headingFormat5.setFont(headingFont5);
     headingFormat5.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{5}\\s.*)");
@@ -77,7 +72,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat headingFormat6;
     QFont headingFont6 = baseFont;
     headingFont6.setBold(true); // 標題加粗
-    headingFont6.setPointSize(baseFont.pointSize() * 1.4); // 標題字號放大 40%
+    headingFont6.setPointSize(baseFont.pointSize() * 1.1);
     headingFormat6.setFont(headingFont6);
     headingFormat6.setForeground(QColor(135, 206, 250)); // 淡藍色
     rule.pattern = QRegularExpression("^(#{6}\\s.*)");
@@ -129,7 +124,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
     QTextCharFormat inlineCodeFormat;
     QFont codeFont = baseFont;
     codeFont.setFamily("Consolas"); // 程式碼建議使用專業的等寬字體
-    codeFont.setPointSize(baseFont.pointSize() * 0.8); // 程式碼字號略小一些
+    codeFont.setPointSize(baseFont.pointSize() * 0.9); // 程式碼字號略小一些
     inlineCodeFormat.setFont(codeFont);
     inlineCodeFormat.setBackground(QColor(230, 230, 230));
     rule.pattern = QRegularExpression("`([^`].*?)`");
@@ -166,7 +161,6 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent, const QFont &bas
 }
 
 
-// 這個函式會被 Qt 自動呼叫
 void MarkdownHighlighter::highlightBlock(const QString &text)
 {
     // 遍歷我們定義的所有規則

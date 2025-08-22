@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>preview_style.css</file>
+        <file>style.qss</file>
     </qresource>
 </RCC>

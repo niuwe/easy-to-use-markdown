@@ -1,0 +1,121 @@
+
+
+QMainWindow {
+    background-color: #f0f2f5;
+}
+
+QWidget {
+    font-family: "Segoe UI", "Microsoft YaHei", "Arial", sans-serif;
+    color: #202124;
+}
+
+/* 菜单栏 */
+QMenuBar {
+    background-color: transparent;
+    padding: 4px;
+    border-radius: 12px;
+    font-size: 10pt;
+}
+
+QMenuBar::item {
+    background: transparent;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border-radius: 8px;
+}
+
+QMenuBar::item:selected {
+    background-color: #e8f0fe;
+}
+
+/* 下拉菜单 */
+QMenu {
+    background-color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 8px;
+}
+
+QMenu::item {
+    padding: 8px 20px;
+    margin: 0px 0px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #e8f0fe;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #dfe1e5;
+    margin: 8px 5px;
+}
+
+/* 工具栏 */
+QToolBar {
+    font-size: 10pt;
+    background-color: #ffffff;
+    border-bottom: 1px solid #dfe1e5;
+    padding: 5px;
+    spacing: 5px;
+}
+
+QToolButton {
+    background-color: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+QToolButton:hover {
+    background-color: #e8f0fe;
+}
+
+QToolButton:pressed {
+    background-color: #d2e3fc;
+}
+
+/* 文本编辑器 */
+QTextEdit#editor {
+    background-color: #ffffff;
+    border: 1px solid #dfe1e5;
+    border-radius: 0px;
+    padding: 15px;
+    font-size: 16px;
+}
+
+QTextEdit#editor:focus {
+    border: 1px solid #4285f4;
+}
+
+/* 滚动条 */
+QScrollBar:vertical {
+    border: none;
+    background: #f0f2f5;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #c1c1c1;
+    min-height: 20px;
+    border-radius: 5px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #a8a8a8;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+
+/* 分割条 */
+QSplitter::handle {
+    background-color: #dfe1e5;
+}
+QSplitter::handle:hover {
+    background-color: #4285f4;
+}
+QSplitter::handle:pressed {
+    background-color: #4285f4;
+}

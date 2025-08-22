@@ -129,6 +129,9 @@ public:
   void Clear() { this->result.str(""); }
 
 protected:
+  std::function<void(std::string&)> parseLineCallback;
+  std::function<std::shared_ptr<BlockParser>(const std::string& line)>
+    getBlockParserForLineCallback;
   std::stringstream result;
   std::shared_ptr<BlockParser> childParser;
 
@@ -182,9 +185,7 @@ protected:
   }
 
 private:
-  std::function<void(std::string&)> parseLineCallback;
-  std::function<std::shared_ptr<BlockParser>(const std::string& line)>
-    getBlockParserForLineCallback;
+
 }; // class BlockParser
 
 // -----------------------------------------------------------------------------

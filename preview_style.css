@@ -1,126 +1,103 @@
-/* preview_style.css (Enhanced Version) */
+/* 预览区样式 - preview_style.css (最终修正版) */
 
-/* 使用 CSS 变量来定义主题颜色，方便未来修改 */
-:root {
-    --main-bg-color: #ffffff;
-    --main-text-color: #24292e;
-    --accent-color: #0366d6;
-    --quote-color: #6a737d;
-    --quote-border-color: #dfe2e5;
-    --code-bg-color: #f6f8fa;
-    --border-color: #eaecef;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+/* 1. 重置 html 和 body */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #ffffff;
     font-size: %1pt;
-    line-height: 1.6;
-    background-color: var(--main-bg-color);
-    color: var(--main-text-color);
-    white-space: pre-wrap;
-    word-wrap: break-word;
 }
 
+/* 2. Markdown 元素的具体样式 */
 h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
+    color: #1a0dab; /* 标题颜色 */
+    border-bottom: 1px solid #dfe1e5;
+    padding-bottom: 10px;
     margin-top: 24px;
     margin-bottom: 16px;
-    padding-bottom: .3em;
-}
-
-h1, h2 {
-    border-bottom: 1px solid var(--border-color);
+    font-size: %1pt;
 }
 
 h1 { font-size: 2.0em; }
-h2 { font-size: 1.5em; }
-h3 { font-size: 1.25em; }
-h4 { font-size: 1.1em; }
-h5 { font-size: 1.0em; }
-h6 { font-size: 0.9em; color: var(--quote-color); }
+h2 { font-size: 1.8em; }
+h3 { font-size: 1.6em; }
+h4 { font-size: 1.4em; }
+h5 { font-size: 1.2em; }
+h6 { font-size: 1.0em; }
 
 p {
-    margin-top: 0;
-    margin-bottom: 1em;
-}
-
-ol, ul {
-    padding-left: 2em;
+    margin-bottom: 16px;
 }
 
 blockquote {
-    border-left: 4px solid var(--quote-border-color);
-    padding: 0 1em;
-    color: var(--quote-color);
+    border-left: 5px solid #4285f4; /* 主色调，我将白色改回了蓝色，白色边框在白色背景上会看不见 */
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    color: #5f6368;
+    border-radius: 0 8px 8px 0;
+}
+
+blockquote blockquote {
+    background-color: #f1f3f4;
+    border-left-color: #fbbc05;
+}
+
+pre {
+    background-color: #f1f3f4;
+    padding: 16px;
+    border-radius: 8px;
+    overflow: auto;
+    border: 1px solid #dfe1e5;
+}
+
+code {
+    font-family: "Consolas", Courier;
+    background-color: #f1f3f4;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: %2pt;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+}
+
+ul, ol {
+    padding-left: 30px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #dfe1e5;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #dfe1e5;
+}
+
+th {
+    background-color: #f8f9fa;
+}
+
+tbody tr:nth-of-type(even) {
+    background-color: #fdfdfe;
 }
 
 a {
-    color: var(--accent-color);
+    color: #1a73e8;
     text-decoration: none;
 }
 
 a:hover {
     text-decoration: underline;
-}
-
-hr {
-    height: .25em;
-    padding: 0;
-    margin: 24px 0;
-    background-color: var(--border-color);
-    border: 0;
-}
-
-/* --- 代码样式 --- */
-pre, code {
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    font-size: %2pt;
-}
-
-pre {
-    padding: 16px;
-    overflow: auto;
-    background-color: var(--code-bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    white-space: pre-wrap;
-}
-
-/* 修正 pre 内部 code 的样式 */
-pre > code {
-    padding: 0;
-    margin: 0;
-    background-color: transparent;
-    border: 0;
-}
-
-/* 行内代码样式 */
-p > code, li > code {
-    padding: .2em .4em;
-    margin: 0;
-    background-color: var(--code-bg-color);
-    border-radius: 6px;
-}
-
-/* --- 新增的表格样式 --- */
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-top: 1em;
-    margin-bottom: 1em;
-}
-
-th, td {
-    border: 1px solid var(--border-color);
-    padding: 8px 12px;
-    text-align: left;
-}
-
-th {
-    background-color: var(--code-bg-color);
-    font-weight: 600;
-}
-
-tr:nth-child(even) {
-    background-color: var(--code-bg-color);
 }

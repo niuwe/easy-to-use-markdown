@@ -6,7 +6,9 @@
 
 #include "maddy/parser.h"
 #include "markdownhighlighter.h"
+#include "maddy/parserconfig.h"
 
+#include <QGraphicsDropShadowEffect>
 #include <QWebEnginePage>
 #include <QScrollBar>
 #include <QTimer>
@@ -59,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_preview = new QWebEngineView(splitter);
     m_preview->setObjectName("preview");
+    //m_preview->page()->setBackgroundColor(Qt::transparent);
 
     mainLayout->addWidget(splitter);
     QList<int> initialSizes;
@@ -126,6 +129,7 @@ void MainWindow::setupActions()
 
     // --- 編輯功能表 ---
     QToolBar *editToolBar = addToolBar("Edit");
+    editToolBar->setObjectName("MainToolBar");
     QMenu *editMenu = menuBar()->addMenu("編輯(&E)");
 
     // --- 編輯區字體控制 (使用 Lambda) ---
@@ -165,10 +169,10 @@ void MainWindow::setupActions()
     });
 
     // 建立新的 Action
-    QAction *setEditorFontAction = new QAction("編輯區字體大小...", this);
+    QAction *setEditorFontAction = new QAction("編輯區字體大小", this);
     connect(setEditorFontAction, &QAction::triggered, this, &MainWindow::setEditorFontSize);
 
-    QAction *setPreviewFontAction = new QAction("預覽區字體大小...", this);
+    QAction *setPreviewFontAction = new QAction("預覽區字體大小", this);
     connect(setPreviewFontAction, &QAction::triggered, this, &MainWindow::setPreviewFontSize);
 
     // 將新的 Action 加入到「編輯」功能表中
@@ -179,6 +183,7 @@ void MainWindow::setupActions()
     editToolBar->addAction(editorZoomOutAction);
     editToolBar->addAction(previewZoomInAction);
     editToolBar->addAction(previewZoomOutAction);
+
 }
 
 
@@ -223,6 +228,8 @@ void MainWindow::openFile()
 
     m_currentFilePath = filePath;
     updateWindowTitle();
+
+
 }
 
 bool MainWindow::saveFile()
@@ -353,24 +360,26 @@ void MainWindow::updatePreview()
 
     // 使用 maddy 引擎進行轉換
     std::stringstream markdownStream(markdownText.toStdString());
-    auto parser = std::make_shared<maddy::Parser>();
+    std::shared_ptr<maddy::ParserConfig> config = std::make_shared<maddy::ParserConfig>();
+    config->enabledParsers &= ~maddy::types::EMPHASIZED_PARSER; // disable emphasized parser
+    config->enabledParsers |= maddy::types::HTML_PARSER; // do not wrap HTML in paragraph
+    std::shared_ptr<maddy::Parser> parser = std::make_shared<maddy::Parser>(config);
     std::string htmlString = parser->Parse(markdownStream);
 
+   // QString wrappedHtml = QString("<div id=\"wrapper\"><div>%1</div></div>")
+   //                         .arg(QString::fromStdString(htmlString));
 
     // 組合 CSS 並顯示
     QString finalCss = m_cssTemplate.arg(m_previewFontSize).arg(m_previewFontSize - 2);
     QString fullHtml = QString("<style>%1</style>").arg(finalCss)
-                     + QString::fromStdString(htmlString);
+                       + QString::fromStdString(htmlString);
 
-    // 顯示結果
     m_preview->setHtml(fullHtml);
 }
 
 void MainWindow::onPreviewLoadFinished()
 {
-    // 當預覽區的新 HTML 載入完成後，執行這段 JavaScript
-    // 這段 JS 的作用是計算出頁面的總捲動高度，然後乘以我們儲存的比例，
-    // 最後將頁面捲動到計算出的位置。
+
     QString script = QString(
         "const scrollHeight = document.body.scrollHeight - window.innerHeight;"
         "window.scrollTo(0, scrollHeight * %1);"
