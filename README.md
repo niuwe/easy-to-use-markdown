@@ -9,5 +9,5 @@
 3. Text size settings in the preview area and editing area
 
 # illustrate
-The [maddy](https://github.com/progsource/maddy) library comes from https://github.com/progsource/maddy, ***
-In order to adapt to this project, some header files have been changed***
+The [maddy](https://github.com/progsource/maddy) library comes from https://github.com/progsource/maddy  
+- ***In order to adapt to this project, some header files have been changed***
